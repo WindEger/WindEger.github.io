@@ -30,12 +30,12 @@ nav{
 .topnav .icon{
 	display: none;
 }
-@media screen and (max-width: 1400px) {
+@media screen and (max-width: 1550px) {
 	nav{
 		margin-left: 20%;
 	}
 }
-@media screen and (max-width: 1150px) {
+@media screen and (max-width: 1300px) {
 	nav{
 		margin-left: 9%;
 	}
