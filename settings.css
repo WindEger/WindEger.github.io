@@ -32,12 +32,12 @@ nav{
 }
 @media screen and (max-width: 1700px) {
 	nav{
-		margin-left: 19%;
+		margin-left: 17%;
 	}
 }
 @media screen and (max-width: 1600px) {
 	nav{
-		margin-left: 9%;
+		margin-left: 8%;
 	}
 }
 @media screen and (max-width: 1110px) {
