@@ -1,122 +1,8 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Учет посещаемости по датам</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            text-align: center;
-        }
-        .group-select, .attendance-table {
-            margin: 20px auto;
-            width: 80%;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .absent {
-            background-color: #ffcccc;
-        }
-        input[type="checkbox"] {
-            transform: scale(1.5);
-        }
-    </style>
-</head>
-<body>
-    <h1>Учет посещаемости по датам</h1>
-
-    <div class="group-select">
-        <label for="group">Выберите группу:</label>
-        <select id="group">
-            <option value="group1">Группа 1</option>
-            <option value="group2">Группа 2</option>
-            <option value="group3">Группа 3</option>
-        </select>
-    </div>
-
-    <div class="attendance-table">
-        <table id="attendanceTable">
-            <thead>
-                <tr>
-                    <th>Фамилия</th>
-                    <!-- Даты будут добавлены динамически -->
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Список студентов и их посещаемость будут сгенерированы динамически -->
-            </tbody>
-        </table>
-    </div>
-
-    <script>
-        const students = {
-            group1: ["Иванов", "Петров", "Сидоров"],
-            group2: ["Козлов", "Смирнов", "Васильев"],
-            group3: ["Николаев", "Кузнецов", "Морозов"]
-        };
-
-        // Пример дат (можно заменить на динамические)
-        const dates = ["2025-03-01", "2025-03-02", "2025-03-03", "2025-03-04"];
-
-        const groupSelect = document.getElementById('group');
-        const attendanceTable = document.getElementById('attendanceTable').getElementsByTagName('tbody')[0];
-
-        // Функция для сохранения состояния
-        function saveState() {
-            const selectedGroup = groupSelect.value;
-            const attendanceState = {};
-
-            const rows = attendanceTable.querySelectorAll('tr');
-            rows.forEach((row, rowIndex) => {
-                const cells = row.querySelectorAll('td');
-                const studentState = {};
-
-                cells.forEach((cell, cellIndex) => {
-                    if (cellIndex > 0) { // Пропускаем первую ячейку (фамилию)
-                        const checkbox = cell.querySelector('input[type="checkbox"]');
-                        studentState[dates[cellIndex - 1]] = checkbox.checked;
-                    }
-                });
-
-                attendanceState[rowIndex] = studentState;
-            });
-
-            // Сохраняем состояние в localStorage
-            localStorage.setItem(selectedGroup, JSON.stringify(attendanceState));
-        }
-
-        // Функция для загрузки состояния
-        function loadState() {
-            const selectedGroup = groupSelect.value;
-            const savedState = localStorage.getItem(selectedGroup);
-
-            if (savedState) {
-                const attendanceState = JSON.parse(savedState);
-                const rows = attendanceTable.querySelectorAll('tr');
-
-                rows.forEach((row, rowIndex) => {
-                    const cells = row.querySelectorAll('td');
-                    const studentState = attendanceState[rowIndex];
-
-                    if (studentState) {
+if (studentState) {
                         cells.forEach((cell, cellIndex) => {
                             if (cellIndex > 0) { // Пропускаем первую ячейку (фамилию)
                                 const checkbox = cell.querySelector('input[type="checkbox"]');
-                                const date = dates[cellIndex - 1];
+                                const date = groupDates[selectedGroup][cellIndex - 1];
                                 checkbox.checked = studentState[date] || false;
                                 toggleAbsent(checkbox); // Обновляем стиль
                             }
@@ -130,6 +16,7 @@
         function updateTable() {
             const selectedGroup = groupSelect.value;
             const groupStudents = students[selectedGroup];
+            const dates = groupDates[selectedGroup];
 
             // Очищаем таблицу
             attendanceTable.innerHTML = '';
