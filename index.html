@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учет посещаемости</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .group-select, .attendance-table {
+            margin: 20px auto;
+            width: 80%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .absent {
+            background-color: #ffcccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Учет посещаемости</h1>
+
+    <div class="group-select">
+        <label for="group">Выберите группу:</label>
+        <select id="group">
+            <!-- Группы будут загружены динамически -->
+        </select>
+    </div>
+
+    <div class="attendance-table">
+        <table id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>Фамилия</th>
+                    <!-- Даты будут добавлены динамически -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Данные будут загружены динамически -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const groupSelect = document.getElementById('group');
+        const attendanceTable = document.getElementById('attendanceTable').getElementsByTagName('tbody')[0];
+
+        // Загрузка групп
+        async function loadGroups() {
+            const response = await fetch('/api/groups');
+            const groups = await response.json();
+            groupSelect.innerHTML = groups.map(group => `
+                <option value="${group.id}">${group.name}</option>
+            `).join('');
+        }
+
+        // Загрузка студентов
+        async function loadStudents(groupId) {
+            const response = await fetch(`/api/students?groupId=${groupId}`);
+            return await response.json();
+        }
+
+        // Загрузка занятий
+        async function loadLessons() {
+            const response = await fetch('/api/lessons');
+            return await response.json();
+        }
+
+        // Загрузка посещаемости
+        async function loadAttendance(lessonId) {
+            const response = await fetch(`/api/attendance?lessonId=${lessonId}`);
+            return await response.json();
+        }
+
+        // Обновление таблицы
+        async function updateTable() {
+            const groupId = groupSelect.value;
+            const students = await loadStudents(groupId);
+            const lessons = await loadLessons();
+
+            // Очищаем таблицу
+            attendanceTable.innerHTML = '';
+
+            // Создаем заголовок таблицы
+            const headerRow = document.createElement('tr');
+            const headerCell = document.createElement('th');
+            headerCell.textContent = "Фамилия";
+            headerRow.appendChild(headerCell);
+
+            lessons.forEach(lesson => {
+                const headerCell = document.createElement('th');
+                headerCell.textContent = lesson.date;
+                headerRow.appendChild(headerCell);
+            });
+
+            attendanceTable.appendChild(headerRow);
+
+            // Заполняем таблицу данными
+            students.forEach(async student => {
+                const row = document.createElement('tr');
+                const cellName = document.createElement('td');
+                cellName.textContent = student.name;
+                row.appendChild(cellName);
+
+                lessons.forEach(async lesson => {
+                    const cell = document.createElement('td');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = "checkbox";
+                    checkbox.checked = true;
+
+                    // Загружаем посещаемость
+                    const attendance = await loadAttendance(lesson.id);
+                    const studentAttendance = attendance.find(a => a.student_id === student.id);
+                    if (studentAttendance) {
+                        checkbox.checked = studentAttendance.is_present === 1;
+                    }
+
+                    checkbox.onchange = async () => {
+                        await fetch('/api/attendance', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                studentId: student.id,
+                                lessonId: lesson.id,
+                                isPresent: checkbox.checked ? 1 : 0
+                            })
+                        });
+                    };
+
+                    cell.appendChild(checkbox);
+                    row.appendChild(cell);
+                });
+
+                attendanceTable.appendChild(row);
+            });
+        }
+
+        // Инициализация
+        groupSelect.addEventListener('change', updateTable);
+        loadGroups().then(updateTable);
+    </script>
+</body>
+</html>
